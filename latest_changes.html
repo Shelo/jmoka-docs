@@ -46,6 +46,24 @@
     <div class="large-9 columns">
         <div class="row">
             <article>
+                <h2>Multiple argument attributes now supported!</h2>
+
+                <p>
+                    This method of setting attributes will simplify lot of things for the game programmer.
+                    The user doesn't need to specify nothing more than just more than one parameter to the
+                    setter method in the component, the engine takes care of the linking of each argument.
+                </p>
+
+                <p>
+                    <strong>A design note</strong>: don't use this to set a lot of stuff that doesn't really
+                    have much in common, always think in the most simple thing, easy to remember,
+                    and most of all, that is independent. In other words, don't do something like:
+                    GeneralInitializator: 102, 1, 'this is some string', @textures.someTexture.
+                    That is bad for attributes, since all of them could have their own attribute.
+                </p>
+            </article>
+
+            <article>
                 <h2>Building towards multiple arguments attributes</h2>
 
                 <p>
