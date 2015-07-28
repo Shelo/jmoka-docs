@@ -1,0 +1,280 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>jMoka Engine</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <link rel="stylesheet" href="css/foundation.css"/>
+    <link rel="stylesheet" href="css/base.css"/>
+    <link rel="stylesheet" href="icons/foundation-icons.css"/>
+    <link href="http://alexgorbatchev.com/pub/sh/current/styles/shThemeDefault.css" rel="stylesheet" type="text/css" />
+    <link href="http://alexgorbatchev.com/pub/sh/current/styles/shCore.css" rel="stylesheet" type="text/css" />
+
+    <script src="js/vendor/modernizr.js"></script>
+
+    <style>
+    article pre {
+        border: none;
+        font-size: 15px;
+        margin: 20px;
+        padding: 10px;
+        overflow-x: auto;
+    }
+    </style>
+</head>
+
+<body>
+<nav class="top-bar" data-topbar role="navigation">
+    <ul class="title-area">
+        <li class="name">
+            <h1><a href="#">jMoka Engine</a></h1>
+        </li>
+
+        <!-- Remove the class "menu-icon" to get rid of menu icon. Take out "Menu" to just have icon alone -->
+        <li class="toggle-topbar menu-icon"><a href="#"><span>Menu</span></a></li>
+    </ul>
+
+    <section class="top-bar-section">
+        <!-- Right Nav Section -->
+        <ul class="right">
+            <li class="has-dropdown">
+                <a href="#">Right Button Dropdown</a>
+
+                <ul class="dropdown">
+                    <li><a href="#">First link in dropdown</a></li>
+                    <li class="active"><a href="#">Active link in dropdown</a></li>
+                </ul>
+            </li>
+        </ul>
+
+        <!-- Left Nav Section -->
+        <ul class="left">
+            <li><a href="index.html">Home</a></li>
+            <li><a href="docs.html">Docs</a></li>
+            <li><a href="example.html">Example</a></li>
+        </ul>
+    </section>
+</nav>
+
+<div class="row">
+    <div class="large-9 columns">
+        <div class="row">
+            <article>
+                <h2>Resources</h2>
+
+                <p>
+                    Resources are a big part of any game, so, the engine provides a very handy way of
+                    loading them and, at the same time, being able to use any of them everywhere, even
+                    inside the <strong>prefab</strong> files (as a normal variable inside expressions or
+                    as references with the <strong>@</strong> token).
+                </p>
+
+                <p>
+                    The Resources class is the class to use for loading resources. The idea is simple: create
+                    a class that extends the Resources class, and then, define public static values inside static
+                    classes (as folders) for every resource you need to load.
+                </p>
+
+                <p>
+                    But, the engine doesn't stop there, if you have your resources organized exactly like
+                    you have them in your folders you can tell the loader to bind them automatically.
+                </p>
+
+                <p>
+                    That sound pretty easy, doesn't it?, well, it is, as you can see in the example below:
+                </p>
+
+                <pre class="brush: java">
+                    public class Res extends Resources
+                    {
+                        @BindLoad(path = "img/", extension = "png",
+                            loader = BindLoad.Loader.TEXTURE)
+                        public static class textures
+                        {
+                            public static Texture player;
+                            public static Texture enemy01;
+                            public static Texture enemy02;
+                            public static Texture enemy03;
+                        }
+
+                        public Res(String root)
+                        {
+                            super(root);
+                        }
+                    }
+                </pre>
+
+                <p>
+                    That code will automatically load those four textures with locations (assuming the root is assets/):
+                </p>
+
+                <pre class="brush: plain">
+                    assets/img/player.png
+                    assets/img/enemy01.png
+                    assets/img/enemy02.png
+                    assets/img/enemy03.png
+                </pre>
+
+                <p>
+                    As you can see, the Res class has a inner class called textures, which has the annotation
+                    <strong>BindLoad</strong> that says: This class with be an automatic bind load, which files
+                    are inside the folder <strong>img/</strong>, with the extension <strong>png</strong> and are
+                    loaded with the <strong>TEXTURE</strong> loader.
+                </p>
+
+                <p>
+                    That's great, we can do a lot with that, but this doesn't stop there because we can have a lot
+                    of special cases, such as:
+                </p>
+
+                <ul>
+                    <li>This one texture is not png, is jpg.</li>
+                    <li>This one texture is not in that folder.</li>
+                    <li>I have a lot of textures inside the <strong>img</strong> folder.</li>
+                    <li>I need this resources to not load right away, because of dependencies (this happens
+                        a lot with prefabs).</li>
+                </ul>
+
+                <p>
+                    As these are fairly common situations the engine provides a way of solving them.
+                </p>
+
+                <p>
+                    The first two are related to the same problem, we have <strong>exceptions</strong>,
+                    and the engine can handle them in other way. In any case you need this, add the annotation
+                    <strong>BindConfig</strong> to the field that requires it, as an example:
+                </p>
+
+                <pre class="brush: java">
+                    public class Res extends Resources
+                    {
+                        @BindLoad(path = "img/", extension = "png",
+                            loader = BindLoad.Loader.TEXTURE)
+                        public static class textures
+                        {
+                            @BindConfig(skip = true)
+                            public static Texture player;
+
+                            @BindConfig(path = "img2/")
+                            public static Texture enemy01;
+
+                            @BindConfig(extension = "jpg")
+                            public static Texture enemy02;
+
+                            public static Texture enemy03;
+                        }
+
+                        public Res(String root)
+                        {
+                            super(root);
+                        }
+                    }
+                </pre>
+
+                <p>
+                    There you can see each way of using the annotation, the first skips that resource (maybe you
+                    have to generate the image later), the second one tells that the image is not inside img/, it is
+                    inside img2/, and the third one says that the extension is jpg, not png.
+                </p>
+
+                <p>
+                    <strong>Note:</strong> For the sake of code simplification, try to avoid exceptions in files.
+                </p>
+
+                <p>
+                    Back to the special cases, the third case is easy to fix, just create an inner class inside
+                    the inner class and set the <strong>BindLoad</strong> annotation again, the binder will
+                    chain these as a folder hierarchy. Example:
+                </p>
+
+                <pre class="brush: java">
+                    public class Res extends Resources
+                    {
+                        @BindLoad(path = "img/", extension = "png",
+                            loader = BindLoad.Loader.TEXTURE)
+                        public static class textures
+                        {
+                            public static Texture player;
+
+                            @BindLoad(path = "enemies/", extension = "png",
+                                loader = BindLoad.Loader.TEXTURE)
+                            public static class enemies
+                            {
+                                public static Texture enemy01;
+                                public static Texture enemy02;
+                                public static Texture enemy02;
+                            }
+                        }
+
+                        public Res(String root)
+                        {
+                            super(root);
+                        }
+                    }
+                </pre>
+
+                <p>
+                    And now, this will load the files:
+                </p>
+
+                <pre class="brush: plain">
+                    assets/img/player.png
+                    assets/img/enemies/enemy01.png
+                    assets/img/enemies/enemy02.png
+                    assets/img/enemies/enemy03.png
+                </pre>
+
+                <p>
+                    Excellent!.
+                </p>
+
+                <p>
+                    And now the final case. This one is very rare, and I have only used it when loading
+                    prefabs. The solution is pretty easy do.
+                </p>
+
+                <p>
+                    In the <strong>BindLoad</strong> annotation, set the value <strong>skip</strong> to true,
+                    this will make the initial loader to skip it, and then, inside the overridable load method
+                    in the Resource class, add this line:
+                </p>
+
+                <pre class="brush: java">
+                    bindLoad(prefabs.class)
+                </pre>
+
+                <p>
+                    Assuming you have an <strong>inner class</strong> called prefabs, the engine
+                    will load it as normally.
+                </p>
+            </article>
+        </div>
+    </div>
+
+    <div class="large-3 columns">
+        <div class="row">
+            <ul class="side-nav">
+                <li><a href="latest_changes.html">Latest Changes</a></li>
+                <li><a href="#">Link 2</a></li>
+                <li><a href="#">Link 3</a></li>
+                <li><a href="#">Link 4</a></li>
+            </ul>
+        </div>
+    </div>
+</div>
+
+<script src="js/vendor/jquery.js"></script>
+<script src="js/foundation/foundation.js"></script>
+<script src="js/foundation/foundation.alert.js"></script>
+<script src="js/foundation/foundation.topbar.js"></script>
+<script src="js/foundation/foundation.reveal.js"></script>
+
+<script src="http://alexgorbatchev.com/pub/sh/current/scripts/shCore.js" type="text/javascript"></script>
+<script src="js/shBrushJava.js"></script>
+<script src="js/shBrushPlain.js"></script>
+
+<script>
+    SyntaxHighlighter.all();
+    $(document).foundation();
+</script>
+</body>
+</html>
